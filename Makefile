@@ -2,7 +2,7 @@ GO ?= $(shell which go)
 OS ?= $(shell $(GO) env GOOS)
 ARCH ?= $(shell $(GO) env GOARCH)
 
-IMAGE_NAME ?= "ghcr.io/infomaniak/cert-manager-webhook-infomaniak"
+IMAGE_NAME ?= "ghcr.io/spameier/cert-manager-webhook-infomaniak"
 IMAGE_TAG ?= "latest"
 NAMESPACE ?= "cert-manager-infomaniak"
 
