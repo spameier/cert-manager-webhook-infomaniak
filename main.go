@@ -18,6 +18,7 @@ import (
 	"github.com/cert-manager/cert-manager/pkg/acme/webhook/cmd"
 	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	"github.com/cert-manager/cert-manager/pkg/issuer/acme/dns/util"
+	"golang.org/x/net/idna"
 )
 
 // GroupName is the API group name (should be unique cluster-wide)
@@ -142,7 +143,23 @@ func (c *infomaniakDNSProviderSolver) do(ch *v1alpha1.ChallengeRequest, action a
 
 	klog.V(2).Infof("%s record `%s`", actionNames[action], ch.ResolvedFQDN)
 	zone := util.UnFqdn(ch.ResolvedZone)
+	// Check if the zone variable is Punycode-encoded and convert it to Unicode if needed
+	if strings.Contains(zone, "xn--") {
+		unicodeZone, err := idna.ToUnicode(zone)
+		if err != nil {
+			return fmt.Errorf("failed to convert zone to Unicode: %w", err)
+		}
+		zone = unicodeZone
+	}
 	source := util.UnFqdn(ch.ResolvedFQDN)
+	// Check if the source variable is Punycode-encoded and convert it to Unicode if needed
+	if strings.Contains(source, "xn--") {
+		unicodeSource, err := idna.ToUnicode(source)
+		if err != nil {
+			return fmt.Errorf("failed to convert source to Unicode: %w", err)
+		}
+		source = unicodeSource
+	}
 	target := ch.Key
 	ttl := uint64(DefaultTTL)
 
