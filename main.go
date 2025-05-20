@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"golang.org/x/net/idna"
 	"os"
 	"strings"
 
@@ -141,8 +142,14 @@ func (c *infomaniakDNSProviderSolver) do(ch *v1alpha1.ChallengeRequest, action a
 	}
 
 	klog.V(2).Infof("%s record `%s`", actionNames[action], ch.ResolvedFQDN)
-	zone := util.UnFqdn(ch.ResolvedZone)
-	source := util.UnFqdn(ch.ResolvedFQDN)
+	zone, err := idna.ToASCII(util.UnFqdn(ch.ResolvedZone))
+	if err != nil {
+		return fmt.Errorf("could not convert ResolvedZone `%s` to ASCII: %v", ch.ResolvedZone, err)
+	}
+	source, err := idna.ToASCII(util.UnFqdn(ch.ResolvedFQDN))
+	if err != nil {
+		return fmt.Errorf("could not convert ResolvedFQDN `%s` to ASCII: %v", ch.ResolvedFQDN, err)
+	}
 	target := ch.Key
 	ttl := uint64(DefaultTTL)
 
@@ -157,8 +164,12 @@ func (c *infomaniakDNSProviderSolver) do(ch *v1alpha1.ChallengeRequest, action a
 		return err
 	}
 
-	if strings.HasSuffix(source, domain.CustomerName) {
-		source = source[:len(source)-len(domain.CustomerName)-1]
+	domainASCII, err := domain.ASCIIName()
+	if err != nil {
+		return err
+	}
+	if strings.HasSuffix(source, domainASCII) {
+		source = source[:len(source)-len(domainASCII)-1]
 	}
 
 	switch action {
