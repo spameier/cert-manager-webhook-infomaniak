@@ -12,6 +12,22 @@ certManager:
   namespace: cert-manager
   serviceAccountName: cert-manager
 
+
+# Use these variables to configure the HTTP_PROXY environment variables.
+
+# Configures the HTTP_PROXY environment variable where a HTTP proxy is required.
+# +docs:property
+# http_proxy: "http://proxy:8080"
+
+# Configures the HTTPS_PROXY environment variable where a HTTP proxy is required.
+# +docs:property
+# https_proxy: "https://proxy:8080"
+
+# Configures the NO_PROXY environment variable where a HTTP proxy is required,
+# but certain domains should be excluded.
+# +docs:property
+# no_proxy: 127.0.0.1,localhost
+
 # used to add a namespace declaration to the static manifest,
 # prefer `--create-namespaces` with `helm install` >= 3.2
 # see https://github.com/helm/helm/issues/6794
