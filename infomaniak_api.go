@@ -140,21 +140,36 @@ func (d *InfomaniakDNSDomain) ASCIIName() (string, error) {
 	return domainASCII, nil
 }
 
+type StringOrBool string
+
+func (s *StringOrBool) UnmarshalJSON(b []byte) error {
+	value := string(b)
+	if value == "true" || value == "false" {
+		*s = ""
+		return nil
+	}
+	err := json.Unmarshal(b, &value)
+	if err != nil {
+		return err
+	}
+	*s = StringOrBool(value)
+	return nil
+}
 
 // InfomaniakDNSRecord defines the format of a DNSRecord object
 type InfomaniakDNSRecord struct {
-	ID         string `json:"id,omitempty"`
-	Source     string `json:"source,omitempty"`
-	SourceIdn  string `json:"source_idn,omitempty"`
-	Type       string `json:"type,omitempty"`
-	TTL        uint64 `json:"ttl,omitempty"`
-	TTLIdn     string `json:"ttl_idn,omitempty"`
-	Target     string `json:"target,omitempty"`
-	TargetIdn  string `json:"target_idn,omitempty"`
-	UpdatedAt  uint64 `json:"updated_at,omitempty"`
-	DyndnsID   string `json:"dyndns_id,omitempty,omitempty"`
-	Priority   uint64 `json:"priority,omitempty"`
-	IsEditable bool   `json:"is_editable,omitempty"`
+	ID         string       `json:"id,omitempty"`
+	Source     StringOrBool `json:"source,omitempty"`
+	SourceIdn  string       `json:"source_idn,omitempty"`
+	Type       string       `json:"type,omitempty"`
+	TTL        uint64       `json:"ttl,omitempty"`
+	TTLIdn     string       `json:"ttl_idn,omitempty"`
+	Target     StringOrBool `json:"target,omitempty"`
+	TargetIdn  string       `json:"target_idn,omitempty"`
+	UpdatedAt  uint64       `json:"updated_at,omitempty"`
+	DyndnsID   string       `json:"dyndns_id,omitempty,omitempty"`
+	Priority   uint64       `json:"priority,omitempty"`
+	IsEditable bool         `json:"is_editable,omitempty"`
 }
 
 // ErrDomainNotFound
@@ -228,7 +243,7 @@ func (ik *InfomaniakAPI) getRecordID(domain *InfomaniakDNSDomain, source, target
 	}
 
 	for _, record := range records {
-		if record.Source == source && record.Target == target && record.Type == rtype {
+		if string(record.Source) == source && string(record.Target) == target && record.Type == rtype {
 			return &record.ID, nil
 		}
 	}
@@ -250,7 +265,7 @@ func (ik *InfomaniakAPI) EnsureDNSRecord(domain *InfomaniakDNSDomain, source, ta
 		return nil
 	}
 
-	record := InfomaniakDNSRecord{Source: source, Target: target, Type: rtype, TTL: ttl}
+	record := InfomaniakDNSRecord{Source: StringOrBool(source), Target: StringOrBool(target), Type: rtype, TTL: ttl}
 	rawJSON, err := json.Marshal(record)
 	if err != nil {
 		return err
